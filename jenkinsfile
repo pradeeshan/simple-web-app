@@ -42,7 +42,7 @@ pipeline {
 
     stage("Build Docker Image") {
       steps {
-        bat "docker build -t pradeeshan/simple-web-app:v1 ."
+        bat "docker build -t pradeeshan/simple-web-app:v2 ."
       }
     }
 
@@ -51,7 +51,7 @@ pipeline {
         script {
           withDockerRegistry(credentialsId: 'docker') {
             
-            bat "docker push pradeeshan/simple-web-app:v1"
+            bat "docker push pradeeshan/simple-web-app:v2"
           }
         }
       }
@@ -59,7 +59,14 @@ pipeline {
 
     stage("Deploy to Container") {
         steps {
-            bat "docker run -d --name simple-web-app -p 3000:3000 pradeeshan/simple-web-app:v1"
+            script {
+                bat '''
+                    docker stop simple-web-app || echo "No running container"
+                    docker rm simple-web-app || echo "No existing container"
+                '''
+                bat "docker run -d --name simple-web-app -p 3000:3000 pradeeshan/simple-web-app:v2"
+                }
+            
             }
         }
 
