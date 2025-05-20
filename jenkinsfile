@@ -5,6 +5,10 @@ pipeline {
     nodejs "node24"
   }
 
+  environment {
+    SONARQUBE_SCANNER_HOME = tool 'SonarScanner'  
+  }
+
   stages {
     stage("Clean Workspace") {
       steps {
@@ -21,6 +25,22 @@ pipeline {
     stage("Install Dependencies") {
       steps {
         bat "npm install"
+      }
+    }
+
+    stage('SonarQube Analysis') {
+      steps {
+        withSonarQubeEnv('sonarqube') {
+          bat "${env.SONARQUBE_SCANNER_HOME}\\bin\\sonar-scanner.bat"
+        }
+      }
+    }
+
+    stage('Quality Gate') {
+      steps {
+        timeout(time: 5, unit: 'MINUTES') {
+          waitForQualityGate abortPipeline: true
+        }
       }
     }
 
@@ -42,7 +62,7 @@ pipeline {
 
     stage("Build Docker Image") {
       steps {
-        bat "docker build -t pradeeshan/simple-web-app:v2 ."
+        bat "docker build -t pradeeshan/simple-web-app:v3 ."
       }
     }
 
@@ -50,25 +70,22 @@ pipeline {
       steps {
         script {
           withDockerRegistry(credentialsId: 'docker') {
-            
-            bat "docker push pradeeshan/simple-web-app:v2"
+            bat "docker push pradeeshan/simple-web-app:v3"
           }
         }
       }
     }
 
     stage("Deploy to Container") {
-        steps {
-            script {
-                bat '''
-                    docker stop simple-web-app || echo "No running container"
-                    docker rm simple-web-app || echo "No existing container"
-                '''
-                bat "docker run -d --name simple-web-app -p 3000:3000 pradeeshan/simple-web-app:v2"
-                }
-            
-            }
+      steps {
+        script {
+          bat '''
+              docker stop simple-web-app || echo "No running container"
+              docker rm simple-web-app || echo "No existing container"
+          '''
+          bat "docker run -d --name simple-web-app -p 3000:3000 pradeeshan/simple-web-app:v3"
         }
-
+      }
+    }
   }
 }
