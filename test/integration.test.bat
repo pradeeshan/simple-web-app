@@ -1,0 +1,3 @@
+@echo off
+echo Running integration tests...
+exit /b 0

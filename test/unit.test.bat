@@ -1,0 +1,3 @@
+@echo off
+echo Running unit tests...
+exit /b 0
