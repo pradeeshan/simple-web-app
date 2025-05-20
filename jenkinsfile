@@ -2,80 +2,68 @@ pipeline {
   agent any
 
   tools {
-    nodejs "node24" 
+    nodejs "node24"
   }
 
-stages {
-        stage("Clean Workspace") {
-            steps {
-                cleanWs()
-            }
-        }
-
-        stage("Git Checkout") {
-            steps {
-                git 'https://github.com/pradeeshan/simple-web-app.git'
-            }
-        }
-
-        stage("Install NPM Dependencies") {
-            steps {
-                bat "npm install"
-            }
-        }
-
-    stage('Install Dependencies') {
+  stages {
+    stage("Clean Workspace") {
       steps {
-        bat 'npm install'
+        cleanWs()
+      }
+    }
+
+    stage("Git Checkout") {
+      steps {
+        git 'https://github.com/pradeeshan/simple-web-app.git'
+      }
+    }
+
+    stage("Install Dependencies") {
+      steps {
+        bat "npm install"
       }
     }
 
     stage('Test') {
-        failFast true
-        parallel {
-            stage('Unit Tests') {
-                steps {
-                    bat 'npm run test:unit'
+      failFast true
+      parallel {
+        stage('Unit Tests') {
+          steps {
+            bat "npm run test:unit"
+          }
+        }
+        stage('Integration Tests') {
+          steps {
+            bat "npm run test:integration"
+          }
+        }
       }
     }
-    stage('Integration Tests') {
+
+    stage("Build Docker Image") {
       steps {
-        bat 'npm run test:integration'
+        bat "docker build -t simple-web-app ."
+      }
+    }
+
+    stage("Tag & Push to DockerHub") {
+      steps {
+        script {
+          withDockerRegistry(credentialsId: 'docker') {
+            bat "docker tag simple-web-app pradeeshan/simple-web-app:latest"
+            bat "docker push pradeeshan/simple-web-app:latest"
+          }
+        }
+      }
+    }
+
+    stage("Deploy to Container") {
+      steps {
+        script {
+          
+          bat "docker run -d --name simple-web-app -p 3000:3000 pradeeshan/simple-web-app:latest"
+        }
       }
     }
   }
-}
-
-
-    
-
-    stage("Build Docker Image") {
-            steps {
-                bat "docker build -t simple-web-app ."
-            }
-        }
-
-        stage("Tag & Push to DockerHub") {
-            steps {
-                script {
-                    withDockerRegistry(credentialsId: 'docker') {
-                        bat "docker tag simple-web-app pradeeshan/simple-web-app:latest"
-                        bat "docker push pradeeshan/simple-web-app:latest"
-                    }
-                }
-            }
-        }
-
-        stage("Deploy to Container") {
-            steps {
-                script {
-                    bat '''
-                    docker stop simple-web-app || echo "No container to stop"
-                    docker rm simple-web-app || echo "No container to remove"
-                    '''
-                    bat "docker run -d --name simple-web-app -p 3000:3000 pradeeshan/simple-web-app:latest"
-                }
-            }
-        }
-    }
 }
