@@ -1,0 +1,12 @@
+{
+  "name": "simple-web-app",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node app.js",
+    "test:unit": "test\\unit.test.bat",
+    "test:integration": "test\\integration.test.bat"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
