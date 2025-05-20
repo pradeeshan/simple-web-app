@@ -28,7 +28,7 @@ pipeline {
         
         withSonarQubeEnv('sonarqube') {
           
-          bat "%SONARQUBE_SCANNER_HOME%\\bin\\sonar-scanner.bat"
+          bat "%SONARQUBE_SCANNER_HOME%\\bin\\sonarscanner.bat"
         }
       }
     }
