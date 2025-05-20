@@ -60,7 +60,10 @@ pipeline {
     stage("Deploy to Container") {
       steps {
         script {
-          
+          bat '''
+            docker stop simple-web-app || echo "No container to stop"
+            docker rm simple-web-app || echo "No container to remove"
+          '''
           bat "docker run -d --name simple-web-app -p 3000:3000 pradeeshan/simple-web-app:latest"
         }
       }
