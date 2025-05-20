@@ -55,7 +55,7 @@ pipeline {
 
     stage("Tag & Push to DockerHub") {
       steps {
-        withDockerRegistry(credentialsId: 'docker') {
+        withDockerRegistry(credentialsId: 'docker', url: 'https://index.docker.io/v1/') {
           bat "docker push pradeeshan/simple-web-app:v3"
         }
       }
