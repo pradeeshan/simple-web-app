@@ -42,7 +42,7 @@ pipeline {
 
     stage("Build Docker Image") {
       steps {
-        bat "docker build -t simple-web-app ."
+        bat "docker build -t pradeeshan/simple-web-app:v1 ."
       }
     }
 
@@ -50,8 +50,8 @@ pipeline {
       steps {
         script {
           withDockerRegistry(credentialsId: 'docker') {
-            bat "docker tag simple-web-app pradeeshan/simple-web-app:latest"
-            bat "docker push pradeeshan/simple-web-app:latest"
+            
+            bat "docker push pradeeshan/simple-web-app:v1"
           }
         }
       }
@@ -59,7 +59,7 @@ pipeline {
 
     stage("Deploy to Container") {
         steps {
-            bat "docker run -d --name simple-web-app -p 3000:3000 pradeeshan/simple-web-app:latest"
+            bat "docker run -d --name simple-web-app -p 3000:3000 pradeeshan/simple-web-app:v1"
             }
         }
 
