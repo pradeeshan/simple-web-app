@@ -6,32 +6,29 @@ pipeline {
   }
 
   environment {
-    SONARQUBE_SCANNER_HOME = tool 'sonarscanner'  
+    
+    SONARQUBE_SCANNER_HOME = tool 'sonarscanner'
   }
 
   stages {
     stage("Clean Workspace") {
-      steps {
-        cleanWs()
-      }
+      steps { cleanWs() }
     }
 
     stage("Git Checkout") {
-      steps {
-        git 'https://github.com/pradeeshan/simple-web-app.git'
-      }
+      steps { git 'https://github.com/pradeeshan/simple-web-app.git' }
     }
 
     stage("Install Dependencies") {
-      steps {
-        bat "npm install"
-      }
+      steps { bat "npm install" }
     }
 
     stage('SonarQube Analysis') {
       steps {
+        
         withSonarQubeEnv('sonarqube') {
-          bat "${env.SONARQUBE_SCANNER_HOME}\\bin\\sonar-scanner.bat"
+          
+          bat "%SONARQUBE_SCANNER_HOME%\\bin\\sonar-scanner.bat"
         }
       }
     }
@@ -47,44 +44,30 @@ pipeline {
     stage('Test') {
       failFast true
       parallel {
-        stage('Unit Tests') {
-          steps {
-            bat "npm run test:unit"
-          }
-        }
-        stage('Integration Tests') {
-          steps {
-            bat "npm run test:integration"
-          }
-        }
+        stage('Unit Tests')     { steps { bat "npm run test:unit"       } }
+        stage('Integration Tests') { steps { bat "npm run test:integration" } }
       }
     }
 
     stage("Build Docker Image") {
-      steps {
-        bat "docker build -t pradeeshan/simple-web-app:v3 ."
-      }
+      steps { bat "docker build -t pradeeshan/simple-web-app:v3 ." }
     }
 
     stage("Tag & Push to DockerHub") {
       steps {
-        script {
-          withDockerRegistry(credentialsId: 'docker') {
-            bat "docker push pradeeshan/simple-web-app:v3"
-          }
+        withDockerRegistry(credentialsId: 'docker') {
+          bat "docker push pradeeshan/simple-web-app:v3"
         }
       }
     }
 
     stage("Deploy to Container") {
       steps {
-        script {
-          bat '''
-              docker stop simple-web-app || echo "No running container"
-              docker rm simple-web-app || echo "No existing container"
-          '''
-          bat "docker run -d --name simple-web-app -p 3000:3000 pradeeshan/simple-web-app:v3"
-        }
+        bat '''
+          docker stop simple-web-app || echo "No running container"
+          docker rm simple-web-app  || echo "No existing container"
+        '''
+        bat "docker run -d --name simple-web-app -p 3000:3000 pradeeshan/simple-web-app:v3"
       }
     }
   }
